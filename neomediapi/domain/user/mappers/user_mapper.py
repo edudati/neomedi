@@ -11,5 +11,4 @@ def map_user_create_dto_to_entity(
         email=dto.email,
         role=dto.role,
         firebase_uid=firebase_uid,
-        created_by=created_by
     )
