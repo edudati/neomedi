@@ -1,6 +1,7 @@
 # infra/db/models/user_model.py
 
 from sqlalchemy import Column, DateTime, Integer, String, Enum, func
+from sqlalchemy.orm import relationship
 from neomediapi.infra.db.base_class import Base
 from neomediapi.enums.user_roles import UserRole
 

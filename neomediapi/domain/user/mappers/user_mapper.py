@@ -3,8 +3,7 @@ from neomediapi.infra.db.models.user_model import User
 
 def map_user_create_dto_to_entity(
     dto: UserCreateDTO,
-    firebase_uid: str,
-    created_by: str
+    firebase_uid: str
 ) -> User:
     return User(
         name=dto.name,

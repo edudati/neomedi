@@ -49,4 +49,4 @@ def register_user(
     except UserAlreadyExistsError:
         raise HTTPException(status_code=409, detail="User already exists")
 
-    return UserResponseDTO.model_validate(created_user)
+    return UserResponseDTO.model_validate(created_user, from_attributes=True)
