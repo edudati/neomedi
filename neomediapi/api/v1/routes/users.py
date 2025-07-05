@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -15,11 +15,6 @@ from neomediapi.domain.user.dtos.user_dto import (
 from neomediapi.infra.db.session import get_db
 
 router = APIRouter()
-
-
-# ============================================
-# POST / - Register user with Firebase Auth
-# ============================================
 
 @router.post("/", response_model=UserResponseDTO)
 def register_user(
@@ -50,3 +45,18 @@ def register_user(
         raise HTTPException(status_code=409, detail="User already exists")
 
     return UserResponseDTO.model_validate(created_user, from_attributes=True)
+
+
+@router.get("/me", response_model=UserResponseDTO)
+def get_logged_in_user(
+    auth_user: AuthenticatedUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user_repo = UserRepository(db)
+    user = user_repo.get_by_firebase_uid(auth_user.uid)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return UserResponseDTO.model_validate(user, from_attributes=True)
+
