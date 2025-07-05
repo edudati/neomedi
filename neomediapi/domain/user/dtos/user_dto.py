@@ -15,3 +15,18 @@ class UserResponseDTO(BaseModel):
 
     class Config:
         orm_mode = True  # allows Pydantic to read data from ORM models
+
+
+class SessionVerifyResponseDTO(BaseModel):
+    user_id: str
+    email: str
+    role: UserRole
+    email_verified: bool
+
+
+class SessionCreateResponseDTO(BaseModel):
+    message: str
+    user_id: str
+    email: str
+    role: UserRole
+    email_verified: bool
