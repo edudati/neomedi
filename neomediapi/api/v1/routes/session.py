@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from neomediapi.infra.db.session import get_db
 from neomediapi.infra.db.repositories.user_repository import UserRepository
 from neomediapi.services.user_service import UserService
-from neomediapi.domain.user.dtos.user_dto import SessionVerifyResponseDTO, SessionCreateResponseDTO
+from neomediapi.domain.user.dtos.user_dto import SessionCreateResponseDTO, SessionVerifyResponseDTO
 from neomediapi.domain.user.exeptions import UserNotFoundError
 
 router = APIRouter()
@@ -55,20 +55,20 @@ def create_secure_session(
     print(f"🔍 Criando sessão para user_id: {user_id}")
     print(f"📧 Email: {email}")
 
-    # Use Clean Architecture layers to get user data with role
+    # Use Clean Architecture layers to get user data with profile
     user_repository = UserRepository(db)
     user_service = UserService(user_repository)
     
     try:
         session_data = user_service.get_session_verify_data(user_id, email, email_verified)
-        print(f"✅ Sessão criada com role: {session_data.role}")
+        print(f"✅ Sessão criada com profile: {session_data.profile}")
         
         # Return with success message
         return SessionCreateResponseDTO(
             message="Session created successfully.",
             user_id=session_data.user_id,
             email=session_data.email,
-            role=session_data.role,
+            profile=session_data.profile,
             email_verified=session_data.email_verified
         )
     except UserNotFoundError:
@@ -84,7 +84,7 @@ def verify_session(
     db: Session = Depends(get_db)
 ):
     """
-    Verify if there is a valid session and return user data including role.
+    Verify if there is a valid session and return user data including profile.
     """
     session_token = request.cookies.get("session")
     
@@ -109,7 +109,7 @@ def verify_session(
         
         try:
             session_data = user_service.get_session_verify_data(user_id, email, email_verified)
-            print(f"✅ Usuário encontrado com role: {session_data.role}")
+            print(f"✅ Usuário encontrado com profile: {session_data.profile}")
             return session_data
         except UserNotFoundError:
             print(f"❌ Usuário não encontrado no banco para firebase_uid: {user_id}")

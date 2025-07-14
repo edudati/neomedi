@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field, validator
 from typing import Optional
 from datetime import date
-from neomediapi.enums.user_roles import UserRole
+from neomediapi.enums.user_profiles import UserProfile
 from neomediapi.enums.document_types import DocumentType
 from neomediapi.enums.gender_types import Gender
 from neomediapi.domain.address.dtos.address_dto import AddressResponseDTO
@@ -9,23 +9,23 @@ from neomediapi.domain.address.dtos.address_dto import AddressResponseDTO
 class UserCreateDTO(BaseModel):
     name: str
     email: EmailStr
-    role: UserRole
+    profile: Optional[UserProfile] = None
 
 
 class UserResponseDTO(BaseModel):
     id: int
     name: str
     email: EmailStr
-    role: UserRole
+    profile: Optional[UserProfile] = None
 
     class Config:
-        orm_mode = True  # allows Pydantic to read data from ORM models
+        from_attributes = True  # allows Pydantic to read data from ORM models
 
 
 class SessionVerifyResponseDTO(BaseModel):
     user_id: str
     email: str
-    role: UserRole
+    profile: Optional[UserProfile] = None
     email_verified: bool
 
 
@@ -33,7 +33,7 @@ class SessionCreateResponseDTO(BaseModel):
     message: str
     user_id: str
     email: str
-    role: UserRole
+    profile: Optional[UserProfile] = None
     email_verified: bool
 
 # New DTOs for complete user profile
@@ -102,11 +102,15 @@ class UserProfileUpdateDTO(BaseModel):
             raise ValueError("Phone number must have between 10 and 15 digits")
         return v
 
+class UserProfileOnlyUpdateDTO(BaseModel):
+    """DTO for updating only the profile field"""
+    profile: UserProfile
+
 class UserProfileResponseDTO(BaseModel):
     """DTO for user profile responses"""
     id: int
     email: EmailStr
-    role: UserRole
+    profile: Optional[UserProfile] = None
     full_name: str
     document_type: Optional[DocumentType]
     document_id: Optional[str]
@@ -122,19 +126,19 @@ class UserProfileResponseDTO(BaseModel):
     updated_at: str
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserSimpleResponseDTO(BaseModel):
     """Simplified user DTO for basic information"""
     id: int
     full_name: str
     email: EmailStr
-    role: UserRole
+    profile: Optional[UserProfile] = None
     is_active: bool
     profile_completed: bool
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserListResponseDTO(BaseModel):
     """DTO for user list responses with pagination"""
@@ -144,4 +148,4 @@ class UserListResponseDTO(BaseModel):
     limit: int
     
     class Config:
-        orm_mode = True
+        from_attributes = True

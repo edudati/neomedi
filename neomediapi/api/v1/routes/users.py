@@ -7,7 +7,7 @@ from neomediapi.auth.dependencies import get_current_user
 from neomediapi.domain.user.exeptions import UserAlreadyExistsError, UserNotFoundError
 from neomediapi.infra.db.repositories.user_repository import UserRepository
 from neomediapi.services.user_service import UserService
-from neomediapi.enums.user_roles import UserRole
+from neomediapi.enums.user_profiles import UserProfile
 from neomediapi.domain.user.dtos.user_dto import (
     UserResponseDTO,
     UserCreateDTO,
@@ -15,7 +15,8 @@ from neomediapi.domain.user.dtos.user_dto import (
     UserProfileUpdateDTO,
     UserProfileResponseDTO,
     UserSimpleResponseDTO,
-    UserListResponseDTO
+    UserListResponseDTO,
+    UserProfileOnlyUpdateDTO
 )
 from neomediapi.domain.user.exceptions import (
     UserValidationError,
@@ -131,6 +132,42 @@ def update_user_profile(
             detail=str(e)
         )
 
+@router.put("/profile", response_model=UserProfileResponseDTO)
+def update_user_profile_only(
+    profile_data: UserProfileOnlyUpdateDTO,
+    current_user: dict = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service)
+):
+    """Update only the profile field of the authenticated user"""
+    try:
+        # Extract user_id from current_user (assuming it contains firebase_uid or user_id)
+        firebase_uid = current_user.get("user_id")
+        if not firebase_uid:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid user authentication"
+            )
+        
+        # Get user by firebase_uid to get the internal user_id
+        user = user_service.user_repository.get_by_firebase_uid(firebase_uid)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        return user_service.update_user_profile_only(user.id, profile_data)
+    except UserNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except UserValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
 @router.get("/", response_model=UserListResponseDTO)
 def get_users(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
@@ -150,15 +187,15 @@ def search_users(
     """Search users by name, email, or document ID"""
     return user_service.search_users(q, skip, limit)
 
-@router.get("/role/{role}", response_model=UserListResponseDTO)
-def get_users_by_role(
-    role: UserRole,
+@router.get("/profile/{profile}", response_model=UserListResponseDTO)
+def get_users_by_profile(
+    profile: UserProfile,
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(100, ge=1, le=1000, description="Number of records to return"),
     user_service: UserService = Depends(get_user_service)
 ):
-    """Get users by role"""
-    return user_service.get_users_by_role(role, skip, limit)
+    """Get users by profile"""
+    return user_service.get_users_by_profile(profile, skip, limit)
 
 @router.get("/document-type/{document_type}", response_model=List[UserSimpleResponseDTO])
 def get_users_by_document_type(

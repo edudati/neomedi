@@ -58,7 +58,7 @@ class AddressResponseDTO(AddressDTO):
     updated_at: str
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class AddressSimpleDTO(BaseModel):
     """Simplified address DTO for basic information"""
@@ -70,4 +70,4 @@ class AddressSimpleDTO(BaseModel):
     postal_code: str
     
     class Config:
-        orm_mode = True 
+        from_attributes = True 

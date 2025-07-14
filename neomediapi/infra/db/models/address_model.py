@@ -28,7 +28,7 @@ class Address(Base):
     
     # Relationships
     user = relationship("User", back_populates="address", uselist=False)
-    # company = relationship("Company", back_populates="address", uselist=False)
+    company = relationship("Company", back_populates="address", uselist=False)
     
     def __repr__(self):
         return f"<Address(id={self.id}, street='{self.street}', city='{self.city}', country='{self.country}')>"

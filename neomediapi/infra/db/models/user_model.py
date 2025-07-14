@@ -3,7 +3,7 @@
 from sqlalchemy import Column, DateTime, Integer, String, Enum, Boolean, Date, ForeignKey, func
 from sqlalchemy.orm import relationship
 from neomediapi.infra.db.base_class import Base
-from neomediapi.enums.user_roles import UserRole
+from neomediapi.enums.user_profiles import UserProfile
 from neomediapi.enums.document_types import DocumentType
 from neomediapi.enums.gender_types import Gender
 
@@ -15,7 +15,7 @@ class User(Base):
     # Basic authentication fields (existing)
     email = Column(String, nullable=False, unique=True, index=True)
     firebase_uid = Column(String, unique=True, nullable=False, index=True)
-    role = Column(Enum(UserRole), nullable=False, default=UserRole.CLIENT)
+    profile = Column(Enum(UserProfile), nullable=True, default=None)
     
     # Personal information (new)
     full_name = Column(String(255), nullable=False, index=True)
@@ -31,6 +31,14 @@ class User(Base):
     # Address relationship (new)
     address_id = Column(Integer, ForeignKey("addresses.id"), nullable=True)
     address = relationship("Address", back_populates="user", uselist=False)
+    
+    # Company relationships
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=True, index=True)
+    company = relationship("Company", back_populates="admin_user", uselist=False, foreign_keys=[company_id])
+    
+    # Professional relationships (for clients)
+    professional_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    professional = relationship("User", remote_side=[id], backref="clients")
     
     # Control fields (new)
     is_active = Column(Boolean, default=True, nullable=False, index=True)

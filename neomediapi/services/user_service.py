@@ -6,7 +6,9 @@ from neomediapi.domain.user.dtos.user_dto import (
     UserProfileUpdateDTO,
     UserProfileResponseDTO,
     UserSimpleResponseDTO,
-    UserListResponseDTO
+    UserListResponseDTO,
+    SessionVerifyResponseDTO,
+    UserProfileOnlyUpdateDTO
 )
 from neomediapi.domain.user.exceptions import (
     UserNotFoundError, 
@@ -19,11 +21,12 @@ from neomediapi.domain.user.mappers.user_mapper import (
     map_user_profile_update_dto_to_entity,
     map_user_entity_to_response_dto,
     map_user_entity_to_profile_response_dto,
-    map_user_entity_to_simple_response_dto
+    map_user_entity_to_simple_response_dto,
+    map_user_to_session_verify_dto
 )
 from neomediapi.infra.db.models.user_model import User
 from neomediapi.infra.db.repositories.user_repository import UserRepository
-from neomediapi.enums.user_roles import UserRole
+from neomediapi.enums.user_profiles import UserProfile
 from neomediapi.enums.document_types import DocumentType
 from neomediapi.enums.gender_types import Gender
 
@@ -119,6 +122,25 @@ class UserService:
         except Exception as e:
             raise UserValidationError(f"Failed to update user profile: {str(e)}")
 
+    def update_user_profile_only(self, user_id: int, profile_data: UserProfileOnlyUpdateDTO) -> UserProfileResponseDTO:
+        """Update only the profile field of user"""
+        try:
+            # Get existing user
+            user = self.user_repository.get_by_id(user_id)
+            if not user:
+                raise UserNotFoundError(f"User with ID {user_id} not found")
+            
+            # Update only the profile field
+            user.profile = profile_data.profile
+            
+            # Save the updated user
+            saved_user = self.user_repository.update(user)
+            
+            return map_user_entity_to_profile_response_dto(saved_user)
+            
+        except Exception as e:
+            raise UserValidationError(f"Failed to update user profile: {str(e)}")
+
     def get_user_profile(self, user_id: int) -> UserProfileResponseDTO:
         """Get complete user profile"""
         user = self.user_repository.get_by_id(user_id)
@@ -160,11 +182,10 @@ class UserService:
             limit=limit
         )
 
-    def get_users_by_role(self, role: UserRole, skip: int = 0, limit: int = 100) -> UserListResponseDTO:
-        """Get users by role"""
-        users = self.user_repository.get_users_by_role(role, skip, limit)
-        total = self.user_repository.count_users_by_role(role)
-        
+    def get_users_by_profile(self, profile: UserProfile, skip: int = 0, limit: int = 100) -> UserListResponseDTO:
+        """Get users by profile"""
+        users = self.user_repository.get_users_by_profile(profile, skip, limit)
+        total = self.user_repository.count_users_by_profile(profile)
         return UserListResponseDTO(
             users=[map_user_entity_to_simple_response_dto(user) for user in users],
             total=total,
@@ -272,14 +293,22 @@ class UserService:
         """Get user statistics"""
         stats = {
             "total_active_users": self.user_repository.count_active_users(),
-            "users_by_role": {},
+            "users_by_profile": {},
             "users_with_complete_profile": self.user_repository.count_users_with_complete_profile(),
             "users_with_address": len(self.user_repository.get_users_with_address()),
             "users_without_address": len(self.user_repository.get_users_without_address())
         }
         
-        # Count by role
-        for role in UserRole:
-            stats["users_by_role"][role.value] = self.user_repository.count_users_by_role(role)
+        # Count by profile
+        for profile in UserProfile:
+            stats["users_by_profile"][profile.value] = self.user_repository.count_users_by_profile(profile)
         
         return stats
+
+    def get_session_verify_data(self, firebase_uid: str, email: str, email_verified: bool) -> SessionVerifyResponseDTO:
+        """Get session verification data for user"""
+        user = self.user_repository.get_by_firebase_uid(firebase_uid)
+        if not user:
+            raise UserNotFoundError(f"User with Firebase UID {firebase_uid} not found")
+        
+        return map_user_to_session_verify_dto(user, email, email_verified)

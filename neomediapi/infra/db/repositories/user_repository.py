@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from typing import Optional, List
 from neomediapi.infra.db.models.user_model import User
-from neomediapi.enums.user_roles import UserRole
+from neomediapi.enums.user_profiles import UserProfile
 from neomediapi.enums.document_types import DocumentType
 from neomediapi.enums.gender_types import Gender
 
@@ -46,10 +46,10 @@ class UserRepository:
             and_(User.is_active == True, User.is_deleted == False)
         ).offset(skip).limit(limit).all()
 
-    def get_users_by_role(self, role: UserRole, skip: int = 0, limit: int = 100) -> List[User]:
-        """Get users by role"""
+    def get_users_by_profile(self, profile: UserProfile, skip: int = 0, limit: int = 100) -> List[User]:
+        """Get users by profile"""
         return self.db.query(User).filter(
-            and_(User.role == role, User.is_deleted == False)
+            and_(User.profile == profile, User.is_deleted == False)
         ).offset(skip).limit(limit).all()
 
     def get_users_by_document_type(self, document_type: DocumentType) -> List[User]:
@@ -166,10 +166,10 @@ class UserRepository:
             and_(User.is_active == True, User.is_deleted == False)
         ).count()
 
-    def count_users_by_role(self, role: UserRole) -> int:
-        """Count users by role"""
+    def count_users_by_profile(self, profile: UserProfile) -> int:
+        """Count users by profile"""
         return self.db.query(User).filter(
-            and_(User.role == role, User.is_deleted == False)
+            and_(User.profile == profile, User.is_deleted == False)
         ).count()
 
     def count_users_with_complete_profile(self) -> int:

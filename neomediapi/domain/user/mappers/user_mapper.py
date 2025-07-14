@@ -9,7 +9,7 @@ from neomediapi.domain.user.dtos.user_dto import (
 )
 from neomediapi.domain.address.mappers.address_mapper import map_address_entity_to_response_dto
 from neomediapi.infra.db.models.user_model import User
-from neomediapi.enums.user_roles import UserRole
+from neomediapi.enums.user_profiles import UserProfile
 from typing import Optional
 
 def map_user_create_dto_to_entity(dto: UserCreateDTO) -> User:
@@ -17,7 +17,7 @@ def map_user_create_dto_to_entity(dto: UserCreateDTO) -> User:
     return User(
         name=dto.name,
         email=dto.email,
-        role=dto.role,
+        profile=dto.profile,
         full_name=dto.name  # Use name as full_name initially
     )
 
@@ -67,7 +67,7 @@ def map_user_entity_to_response_dto(user: User) -> UserResponseDTO:
         id=user.id,
         name=user.full_name,  # Use full_name as name for backward compatibility
         email=user.email,
-        role=user.role
+        profile=user.profile
     )
 
 def map_user_entity_to_profile_response_dto(user: User) -> UserProfileResponseDTO:
@@ -75,7 +75,7 @@ def map_user_entity_to_profile_response_dto(user: User) -> UserProfileResponseDT
     return UserProfileResponseDTO(
         id=user.id,
         email=user.email,
-        role=user.role,
+        profile=user.profile,
         full_name=user.full_name,
         document_type=user.document_type,
         document_id=user.document_id,
@@ -97,7 +97,7 @@ def map_user_entity_to_simple_response_dto(user: User) -> UserSimpleResponseDTO:
         id=user.id,
         full_name=user.full_name,
         email=user.email,
-        role=user.role,
+        profile=user.profile,
         is_active=user.is_active,
         profile_completed=user.profile_completed
     )
@@ -110,6 +110,6 @@ def map_user_to_session_verify_dto(
     return SessionVerifyResponseDTO(
         user_id=str(user.firebase_uid),
         email=email,
-        role=UserRole(user.role),
+        profile=user.profile,
         email_verified=email_verified
     )
